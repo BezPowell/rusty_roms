@@ -19,7 +19,8 @@ pub struct Datafile {
 #[derive(Debug, Deserialize, PartialEq)]
 pub struct Game {
     name: String,
-    rom: Rom,
+    #[serde(rename = "rom", default)]
+    roms: Vec<Rom>,
 }
 
 impl Datafile {
@@ -53,7 +54,9 @@ impl Datafile {
 
         // Build Hashmap of ROMs.
         for game in &self.games {
-            roms.insert(game.rom().hash(), game.rom());
+            for rom in game.rom() {
+                roms.insert(rom.hash(), rom);
+            }
         }
 
         // Check files against roms
@@ -68,8 +71,8 @@ impl Datafile {
 }
 
 impl Game {
-    pub fn rom(&self) -> &Rom {
-        &self.rom
+    pub fn rom(&self) -> &Vec<Rom> {
+        &self.roms
     }
 }
 
@@ -90,6 +93,12 @@ mod tests {
         let matches = dat.check_directory("test/roms/megadrive").unwrap();
 
         assert_eq!(matches.len(), 1);
-        assert_eq!(matches[0], ("test/roms/megadrive/30yearsofnintendont.bin".to_string(), "30 Years Of Nintendon't.bin".to_string()));
+        assert_eq!(
+            matches[0],
+            (
+                "test/roms/megadrive/30yearsofnintendont.bin".to_string(),
+                "30 Years Of Nintendon't.bin".to_string()
+            )
+        );
     }
 }
