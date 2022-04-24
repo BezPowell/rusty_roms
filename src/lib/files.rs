@@ -54,13 +54,27 @@ impl<'a> Match<'a> {
 
 #[cfg(test)]
 mod tests {
-    use crate::lib::files::read_file;
+    use crate::lib::{dat::Datafile, files::read_file};
 
-    use super::Rom;
+    use super::{check_files, Rom};
 
     #[test]
     fn can_read_rom() {
         let rom = "test/roms/megadrive/30yearsofnintendont.bin";
         read_file(rom);
+    }
+
+    #[test]
+    fn can_check_dir() {
+        let romdir = "test/roms/megadrive/";
+        let dat = Datafile::from_file("test/dats/megadrive.dat").unwrap();
+        let matches = check_files(romdir, &dat).unwrap();
+
+        assert_eq!(matches.len(), 1);
+        assert_eq!(
+            matches[0].file(),
+            "test/roms/megadrive/30yearsofnintendont.bin"
+        );
+        assert_ne!(matches[0].rom(), &None);
     }
 }
