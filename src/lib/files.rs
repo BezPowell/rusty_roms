@@ -1,14 +1,21 @@
+use crate::lib::dat::Datafile;
+use crate::lib::rom::Rom;
 use std::{
     fs,
     io::{self, Read},
 };
 
-use super::dat::{Datafile, Rom};
-
-pub fn read_file(src: &str) -> io::Result<String> {
+pub fn read_file(src: &str) -> io::Result<Vec<u8>> {
+    // Open file and read contents.
     let mut file = std::fs::File::open(src).unwrap();
-    let mut contents = String::new();
-    file.read_to_string(&mut contents)?;
+    let mut contents = Vec::new();
+    file.read_to_end(&mut contents)?;
+
+    // Look for iNES header.
+    if String::from_utf8_lossy(&contents[..=16]).starts_with("NES") {
+        // If found, return contents minus header.
+        contents = contents[16..].to_vec();
+    }
 
     Ok(contents)
 }
@@ -42,5 +49,18 @@ impl<'a> Match<'a> {
 
     pub fn rom(&self) -> &Option<&'a Rom> {
         &self.rom
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::lib::files::read_file;
+
+    use super::Rom;
+
+    #[test]
+    fn can_read_rom() {
+        let rom = "test/roms/megadrive/30yearsofnintendont.bin";
+        read_file(rom);
     }
 }
