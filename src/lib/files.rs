@@ -7,6 +7,8 @@ use std::{
     io::{self, Read},
 };
 
+const NES_HEADER_SIZE: usize = 16;
+
 pub struct File {
     path: String,
     hash: String,
@@ -20,9 +22,9 @@ impl File {
         file.read_to_end(&mut contents)?;
 
         // Look for iNES header.
-        if String::from_utf8_lossy(&contents[..=16]).starts_with("NES") {
+        if String::from_utf8_lossy(&contents[..=NES_HEADER_SIZE]).starts_with("NES") {
             // If found, use contents minus header.
-            contents = contents[16..].to_vec();
+            contents = contents[NES_HEADER_SIZE..].to_vec();
         }
 
         // Hash contents
