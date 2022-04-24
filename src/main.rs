@@ -1,7 +1,5 @@
-use easy_args::{arg_spec, ArgSpec};
-use lib::{dat::Datafile, files::check_files};
-use sha1::digest::typenum::Le;
-
+use easy_args::ArgSpec;
+use lib::dat::Datafile;
 mod lib;
 
 fn main() {
@@ -25,15 +23,11 @@ fn main() {
     };
 
     // Verify ROMs
-    let matches = check_files(&input, &dat).unwrap();
+    let matches = dat.check_directory(input).unwrap();
 
     // Just print out matches for now
-    for entry in matches {
-        if let Some(rom) = entry.rom() {
-            println!("File {} matched.", entry.file());
-            println!("Matching rom: {}", rom.name());
-        } else {
-            println!("File {} not matched.", entry.file());
-        }
+    for rom in matches {
+        println!("Matched file {}", rom.0);
+        println!("ROM name {}", rom.1);
     }
 }
