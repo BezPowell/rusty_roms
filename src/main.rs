@@ -27,7 +27,6 @@ fn main() {
 
     // Just print out matches for now
     for rom in matches {
-        println!("Matched file {}", rom.0);
-        println!("ROM name {}", rom.1);
+        println!("{:?}", rom);
     }
 }

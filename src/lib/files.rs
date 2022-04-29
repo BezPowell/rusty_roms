@@ -1,10 +1,13 @@
 use crypto::digest::Digest;
-use std::io::{self, Read};
+use std::{
+    io::{self, Read},
+    path::{Path, PathBuf},
+};
 
 const NES_HEADER_SIZE: usize = 16;
 
 pub struct File {
-    path: String,
+    path: PathBuf,
     hash: String,
 }
 
@@ -27,13 +30,13 @@ impl File {
         let hash = hasher1.result_str();
 
         Ok(File {
-            path: src.to_string(),
+            path: PathBuf::from(src),
             hash,
         })
     }
 
-    pub fn path(&self) -> &str {
-        &self.path
+    pub fn path(&self) -> &Path {
+        &self.path.as_path()
     }
 
     pub fn hash(&self) -> &str {
