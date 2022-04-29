@@ -1,5 +1,4 @@
-use crypto::digest::Digest;
-use serde_derive::{Deserialize, Serialize};
+use serde_derive::Deserialize;
 
 #[derive(Debug, Deserialize, PartialEq)]
 pub struct Rom {

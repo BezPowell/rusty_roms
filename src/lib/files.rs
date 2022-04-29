@@ -1,11 +1,5 @@
 use crypto::digest::Digest;
-
-use crate::lib::dat::Datafile;
-use crate::lib::rom::Rom;
-use std::{
-    fs,
-    io::{self, Read},
-};
+use std::io::{self, Read};
 
 const NES_HEADER_SIZE: usize = 16;
 
@@ -30,7 +24,7 @@ impl File {
         // Hash contents
         let mut hasher1 = crypto::sha1::Sha1::new();
         hasher1.input(&contents);
-        let mut hash = hasher1.result_str();
+        let hash = hasher1.result_str();
 
         Ok(File {
             path: src.to_string(),

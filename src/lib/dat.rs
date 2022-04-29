@@ -4,23 +4,14 @@ use std::{
     io::{self, Read},
 };
 
-use crate::lib::rom::Rom;
-use serde_derive::{Deserialize, Serialize};
+use crate::lib::{files::File, game::Game};
+use serde_derive::Deserialize;
 use serde_xml_rs::{from_str, Error};
-
-use super::{files::File, rom};
 
 #[derive(Debug, Deserialize, PartialEq)]
 pub struct Datafile {
     #[serde(rename = "game", default)]
     games: Vec<Game>,
-}
-
-#[derive(Debug, Deserialize, PartialEq)]
-pub struct Game {
-    name: String,
-    #[serde(rename = "rom", default)]
-    roms: Vec<Rom>,
 }
 
 impl Datafile {
@@ -67,12 +58,6 @@ impl Datafile {
         }
 
         matches
-    }
-}
-
-impl Game {
-    pub fn rom(&self) -> &Vec<Rom> {
-        &self.roms
     }
 }
 
