@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use easy_args::ArgSpec;
 use lib::dat::Datafile;
 mod lib;
@@ -9,6 +11,9 @@ fn main() {
         .string("output")
         .parse()
         .unwrap();
+
+    // Start timing
+    let now = Instant::now();
 
     // Process dat
     let dat = match args.string("dat") {
@@ -25,8 +30,13 @@ fn main() {
     // Verify ROMs
     let matches = dat.check_directory(input).unwrap();
 
+    // Get elapsed time
+    let elapsed = now.elapsed();
+    let total = matches.len();
+
     // Just print out matches for now
     for rom in matches {
         println!("{:?}", rom);
     }
+    println!("Checked {} roms in {:.2?}", total, elapsed);
 }
