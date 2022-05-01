@@ -1,4 +1,4 @@
-use std::time::Instant;
+use std::{fs, path::Path, time::Instant};
 
 use easy_args::ArgSpec;
 use lib::dat::Datafile;
@@ -29,6 +29,16 @@ fn main() {
 
     // Verify ROMs
     let matches = dat.check_directory(input).unwrap();
+
+    // Copy files if directory specified
+    if let Some(output) = args.string("output") {
+        for item in &matches {
+            if let Some(name) = item.output_path() {
+                let target = Path::new(output).join(name);
+                fs::copy(item.file(), target).unwrap();
+            }
+        }
+    }
 
     // Get elapsed time
     let elapsed = now.elapsed();
