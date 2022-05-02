@@ -2,6 +2,8 @@ use std::{fs, path::Path, time::Instant};
 
 use easy_args::ArgSpec;
 use lib::dat::Datafile;
+
+use crate::lib::set::CheckedSet;
 mod lib;
 
 fn main() {
@@ -28,11 +30,17 @@ fn main() {
     };
 
     // Verify ROMs
-    let matches = dat.check_directory(input).unwrap();
+    let matches = CheckedSet::new(dat.check_directory(input).unwrap());
+
+    // Display results
+    for rom in matches.results() {
+        println!("{}", rom.pretty_print());
+    }
 
     // Copy files if directory specified
     if let Some(output) = args.string("output") {
-        for item in &matches {
+        println!("Copying Files");
+        for item in matches.results() {
             if let Some(name) = item.output_path() {
                 let target = Path::new(output).join(name);
                 fs::copy(item.file(), target).unwrap();
@@ -42,11 +50,11 @@ fn main() {
 
     // Get elapsed time
     let elapsed = now.elapsed();
-    let total = matches.len();
+    let counts = matches.counts();
 
-    // Just print out matches for now
-    for rom in matches {
-        println!("{:?}", rom);
-    }
-    println!("Checked {} roms in {:.2?}", total, elapsed);
+    println!("Checked {} roms in {:.2?}", matches.len(), elapsed);
+    println!(
+        "{} matched exactly. {} matched with wrong filename. {} could not be matched",
+        counts.0, counts.1, counts.2
+    );
 }
