@@ -1,9 +1,13 @@
-use std::{fs, path::Path, time::Instant};
+use std::{
+    fs,
+    path::{Path, PathBuf},
+    time::Instant,
+};
 
 use easy_args::ArgSpec;
 use lib::dat::Datafile;
 
-use crate::lib::set::CheckedSet;
+use crate::lib::{files::File, set::CheckedSet};
 mod lib;
 
 fn main() {
@@ -23,38 +27,22 @@ fn main() {
         None => panic!("No DAT file specified."),
     };
 
-    // Set input directory
-    let input = match args.string("input") {
-        Some(src) => src,
+    // Load files
+    let files = match args.string("input") {
+        Some(src) => File::read_dir(src).unwrap(),
         None => panic!("No input directory specified."),
     };
 
     // Verify ROMs
-    let matches = CheckedSet::new(dat.check_directory(input).unwrap());
+    let results = CheckedSet::new(dat, files);
 
     // Display results
-    for rom in matches.results() {
-        println!("{}", rom.pretty_print());
-    }
-
-    // Copy files if directory specified
-    if let Some(output) = args.string("output") {
-        println!("Copying Files");
-        for item in matches.results() {
-            if let Some(name) = item.output_path() {
-                let target = Path::new(output).join(name);
-                fs::copy(item.file(), target).unwrap();
-            }
-        }
+    for rom in results.results() {
+        println!("{:?}", rom);
     }
 
     // Get elapsed time
     let elapsed = now.elapsed();
-    let counts = matches.counts();
 
-    println!("Checked {} roms in {:.2?}", matches.len(), elapsed);
-    println!(
-        "{} matched exactly. {} matched with wrong filename. {} could not be matched",
-        counts.0, counts.1, counts.2
-    );
+    println!("Checked roms in {:.2?}", elapsed);
 }
