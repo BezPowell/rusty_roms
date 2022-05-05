@@ -5,15 +5,12 @@ use std::{
     path::{Path, PathBuf},
 };
 
-use super::verify::VerifiedStatus;
-
 const NES_HEADER_SIZE: usize = 16;
 
 #[derive(Debug, PartialEq)]
 pub struct File {
     path: PathBuf,
     hash: String,
-    status: Option<VerifiedStatus>,
 }
 
 impl File {
@@ -52,7 +49,6 @@ impl File {
         Ok(File {
             path: PathBuf::from(src),
             hash,
-            status: None,
         })
     }
 
@@ -64,12 +60,8 @@ impl File {
         &self.hash
     }
 
-    pub fn status(&self) -> &Option<VerifiedStatus> {
-        &self.status
-    }
-
-    pub fn set_status(&mut self, status: VerifiedStatus) {
-        self.status = Some(status);
+    pub fn name(&self) -> Option<&str> {
+        self.path().file_name()?.to_str()
     }
 }
 
@@ -104,8 +96,7 @@ mod tests {
 
         assert!(roms.contains(&File {
             path: PathBuf::from("test/roms/megadrive/30yearsofnintendont.bin",),
-            hash: "f1cd840f271d3197d9f6706795898a880c81ff83".to_string(),
-            status: None
+            hash: "f1cd840f271d3197d9f6706795898a880c81ff83".to_string()
         }));
 
         // Clean up tmp directory

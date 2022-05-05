@@ -1,54 +1,52 @@
 use std::collections::HashMap;
 
-use super::{dat::Datafile, files::File, rom::Rom, verify::VerifiedStatus};
+use super::{files::File, verify::VerifiedStatus};
 
-pub struct CheckedSet {
+pub struct CheckedSet<'a> {
     verified: usize,
     notname: usize,
     unverified: usize,
-    results: Vec<File>,
+    results: Vec<(&'a File, VerifiedStatus<'a>)>,
 }
 
-impl CheckedSet {
-    pub fn new(dat: Datafile, mut files: Vec<File>) -> CheckedSet {
+impl CheckedSet<'_> {
+    pub fn new<'a>(roms: &'a HashMap<String, String>, files: &'a Vec<File>) -> CheckedSet<'a> {
         // Initialise counts
         let mut verified = 0;
         let mut notname = 0;
         let mut unverified = 0;
-
-        // Build hashmap from dat
-        let roms = CheckedSet::indexed_roms(dat.roms());
+        let mut results = Vec::with_capacity(files.len());
 
         // Check files against roms
-        for file in &mut files {
-            if let Some(rom) = roms.get(file.hash()) {
-                if file.path().file_name().unwrap() == rom.name() {
+        for file in files {
+            let status = if let Some(rom) = roms.get(file.hash()) {
+                if &file.name().unwrap() == &rom {
                     // Exact match
-                    file.set_status(VerifiedStatus::Verified);
                     verified += 1;
+                    VerifiedStatus::Verified { name: rom }
                 } else {
                     // Contents match, but not filename
-                    file.set_status(VerifiedStatus::MatchNotName {
-                        name: rom.name().to_string(),
-                    });
                     notname += 1;
+                    VerifiedStatus::MatchNotName { name: rom }
                 }
             } else {
                 // No match found
-                file.set_status(VerifiedStatus::Unverified);
                 unverified += 1;
-            }
+                VerifiedStatus::Unverified
+            };
+
+            results.push((file, status));
         }
 
         CheckedSet {
             verified,
             notname,
             unverified,
-            results: files,
+            results,
         }
     }
 
-    pub fn results(&self) -> &Vec<File> {
+    pub fn results(&self) -> &Vec<(&File, VerifiedStatus)> {
         &self.results
     }
 
@@ -59,31 +57,21 @@ impl CheckedSet {
     pub fn len(&self) -> usize {
         self.results.len()
     }
-
-    fn indexed_roms(roms: Vec<Rom>) -> HashMap<String, Rom> {
-        let mut set = HashMap::new();
-        // Convert Vec into HashMap with Rom digest as index.
-        for rom in roms {
-            set.insert(rom.hash().to_string(), rom);
-        }
-
-        set
-    }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::path::Path;
-
     use crate::lib::{dat::Datafile, files::File, verify::VerifiedStatus};
 
     use super::CheckedSet;
 
     #[test]
     fn can_test_roms() {
-        let dat = Datafile::from_file("test/dats/megadrive.dat").unwrap();
+        let roms = Datafile::from_file("test/dats/megadrive.dat")
+            .unwrap()
+            .roms();
         let files = File::read_dir("test/roms/megadrive").unwrap();
-        let set = CheckedSet::new(dat, files);
+        let set = CheckedSet::new(&roms, &files);
 
         // Check number of Files
         assert_eq!(set.results().len(), 3);
@@ -92,7 +80,8 @@ mod tests {
             .results()
             .iter()
             .find(|item| {
-                item.path().file_name().unwrap().to_str().unwrap() == "30 Years Of Nintendon't.bin"
+                item.0.path().file_name().unwrap().to_str().unwrap()
+                    == "30 Years Of Nintendon't.bin"
             })
             .unwrap();
 
@@ -100,23 +89,28 @@ mod tests {
             .results()
             .iter()
             .find(|item| {
-                item.path().file_name().unwrap().to_str().unwrap() == "30yearsofnintendont.bin"
+                item.0.path().file_name().unwrap().to_str().unwrap() == "30yearsofnintendont.bin"
             })
             .unwrap();
 
         let no_match = set
             .results()
             .iter()
-            .find(|item| item.path().file_name().unwrap().to_str().unwrap() == "failed.bin")
+            .find(|item| item.0.path().file_name().unwrap().to_str().unwrap() == "failed.bin")
             .unwrap();
 
-        assert_eq!(exact_match.status(), &Some(VerifiedStatus::Verified));
         assert_eq!(
-            partial_match.status(),
-            &Some(VerifiedStatus::MatchNotName {
-                name: "30 Years Of Nintendon't.bin".to_string()
-            })
+            exact_match.1,
+            VerifiedStatus::Verified {
+                name: &"30 Years Of Nintendon't.bin".to_string()
+            }
         );
-        assert_eq!(no_match.status(), &Some(VerifiedStatus::Unverified));
+        assert_eq!(
+            partial_match.1,
+            VerifiedStatus::MatchNotName {
+                name: &"30 Years Of Nintendon't.bin".to_string()
+            }
+        );
+        assert_eq!(no_match.1, VerifiedStatus::Unverified);
     }
 }

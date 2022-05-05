@@ -1,6 +1,9 @@
-use std::io::Read;
+mod game;
+mod rom;
 
-use crate::lib::{game::Game, rom::Rom};
+use std::{collections::HashMap, io::Read};
+
+use game::Game;
 use serde_derive::Deserialize;
 use serde_xml_rs::{from_str, Error};
 
@@ -22,12 +25,12 @@ impl Datafile {
         Ok(dat)
     }
 
-    pub fn roms(self) -> Vec<Rom> {
-        let mut roms = Vec::new();
-
+    pub fn roms(self) -> HashMap<String, String> {
+        let mut roms = HashMap::with_capacity(self.games.len());
+        // Convert Vec into HashMap with Rom digest as index.
         for game in self.games {
-            for rom in game.rom() {
-                roms.push(rom);
+            for rom in game.roms() {
+                roms.insert(rom.hash().to_string(), rom.name().to_string());
             }
         }
 
@@ -44,5 +47,17 @@ mod tests {
         let dat = Datafile::from_file("test/dats/megadrive.dat").unwrap();
 
         assert_eq!(dat.roms().len(), 3);
+    }
+
+    #[test]
+    fn can_index_roms() {
+        let dat = Datafile::from_file("test/dats/megadrive.dat").unwrap();
+        let roms = dat.roms();
+
+        assert_eq!(
+            roms.get("f1cd840f271d3197d9f6706795898a880c81ff83")
+                .unwrap(),
+            "30 Years Of Nintendon't.bin"
+        );
     }
 }

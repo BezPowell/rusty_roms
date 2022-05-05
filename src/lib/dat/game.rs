@@ -1,4 +1,4 @@
-use crate::lib::rom::Rom;
+use super::rom::Rom;
 use serde_derive::Deserialize;
 
 #[derive(Debug, Deserialize, PartialEq)]
@@ -9,7 +9,7 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn rom(self) -> Vec<Rom> {
+    pub fn roms(self) -> Vec<Rom> {
         self.roms
     }
 }
