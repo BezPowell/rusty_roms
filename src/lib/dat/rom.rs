@@ -3,9 +3,7 @@ use serde_derive::Deserialize;
 #[derive(Debug, Deserialize, PartialEq)]
 pub struct Rom {
     name: String,
-    size: u32,
     sha1: String,
-    status: Option<String>,
 }
 
 impl Rom {
