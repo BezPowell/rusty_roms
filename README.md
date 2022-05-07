@@ -1,4 +1,6 @@
 # rusty_roms
+[![Rust](https://github.com/BezPowell/rusty_roms/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/BezPowell/rusty_roms/actions/workflows/rust.yml)
+
 Rusty Roms is a simple command-line application to check game roms against no-intro dat files. It can both verify roms, and optionally copy and rename those that match.
 
 Rusty Roms is not complete yet, but is already usable. The automated test will fail on your system, as they rely on actual ROMS, which almost certainly do not allow redistribution; any suggestions for test roms that could be shipped with the source-code are most appreciated!
