@@ -1,11 +1,13 @@
 mod game;
 mod rom;
 
-use std::{collections::HashMap, io::Read};
+use std::{collections::HashMap, io::Read, str::FromStr};
 
 use game::Game;
 use serde_derive::Deserialize;
 use serde_xml_rs::{from_str, Error};
+
+use super::verify::hash::Checksum;
 
 #[derive(Debug, Deserialize, PartialEq)]
 pub struct Datafile {
@@ -25,12 +27,15 @@ impl Datafile {
         Ok(dat)
     }
 
-    pub fn roms(self) -> HashMap<String, String> {
+    pub fn roms(self) -> HashMap<Checksum, String> {
         let mut roms = HashMap::with_capacity(self.games.len());
         // Convert Vec into HashMap with Rom digest as index.
         for game in self.games {
             for rom in game.roms() {
-                roms.insert(rom.hash().to_string(), rom.name().to_string());
+                roms.insert(
+                    Checksum::from_str(rom.hash()).unwrap(),
+                    rom.name().to_string(),
+                );
             }
         }
 
@@ -40,6 +45,10 @@ impl Datafile {
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
+    use crate::lib::verify::hash::Checksum;
+
     use super::Datafile;
 
     #[test]
@@ -55,7 +64,7 @@ mod tests {
         let roms = dat.roms();
 
         assert_eq!(
-            roms.get("f1cd840f271d3197d9f6706795898a880c81ff83")
+            roms.get(&Checksum::from_str("f1cd840f271d3197d9f6706795898a880c81ff83").unwrap())
                 .unwrap(),
             "30 Years Of Nintendon't.bin"
         );

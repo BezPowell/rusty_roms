@@ -1,4 +1,5 @@
-use crypto::digest::Digest;
+use crate::lib::verify::hash::Checksum;
+use sha1::{Digest, Sha1};
 use std::{
     fs,
     io::{self, Read},
@@ -10,7 +11,7 @@ const NES_HEADER_SIZE: usize = 16;
 #[derive(Debug, PartialEq)]
 pub struct File {
     path: PathBuf,
-    hash: String,
+    hash: Checksum,
 }
 
 impl File {
@@ -42,13 +43,13 @@ impl File {
         }
 
         // Hash contents
-        let mut hasher1 = crypto::sha1::Sha1::new();
-        hasher1.input(&contents);
-        let hash = hasher1.result_str();
+        let mut hasher = Sha1::new();
+        hasher.update(&contents);
+        let digest: [u8; 20] = *hasher.finalize().as_ref();
 
         Ok(File {
             path: PathBuf::from(src),
-            hash,
+            hash: Checksum::new(digest),
         })
     }
 
@@ -56,7 +57,7 @@ impl File {
         &self.path.as_path()
     }
 
-    pub fn hash(&self) -> &str {
+    pub fn hash(&self) -> &Checksum {
         &self.hash
     }
 
@@ -67,9 +68,9 @@ impl File {
 
 #[cfg(test)]
 mod tests {
-    use std::{fs, path::PathBuf};
+    use std::{fs, path::PathBuf, str::FromStr};
 
-    use crate::lib::files::File;
+    use crate::lib::{files::File, verify::hash::Checksum};
 
     #[test]
     fn can_read_rom() {
@@ -77,13 +78,19 @@ mod tests {
             "test/roms/megadrive/30yearsofnintendont.bin",
         ))
         .unwrap();
-        assert_eq!(rom.hash(), "f1cd840f271d3197d9f6706795898a880c81ff83");
+        assert_eq!(
+            rom.hash(),
+            &Checksum::from_str("f1cd840f271d3197d9f6706795898a880c81ff83").unwrap()
+        );
     }
 
     #[test]
     fn can_read_nes_rom() {
         let rom = File::new(&PathBuf::from("test/roms/nes/1942.nes")).unwrap();
-        assert_eq!(rom.hash(), "7f57eace7cada7c36412a50f2299231b304527a8");
+        assert_eq!(
+            rom.hash(),
+            &Checksum::from_str("7f57eace7cada7c36412a50f2299231b304527a8").unwrap()
+        );
     }
 
     #[test]
@@ -96,7 +103,7 @@ mod tests {
 
         assert!(roms.contains(&File {
             path: PathBuf::from("test/roms/megadrive/30yearsofnintendont.bin",),
-            hash: "f1cd840f271d3197d9f6706795898a880c81ff83".to_string()
+            hash: Checksum::from_str("f1cd840f271d3197d9f6706795898a880c81ff83").unwrap()
         }));
 
         // Clean up tmp directory

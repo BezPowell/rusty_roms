@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use super::{files::File, verify::VerifiedStatus};
+use super::{files::File, verify::hash::Checksum, verify::VerifiedStatus};
 
 pub struct CheckedSet<'a> {
     verified: usize,
@@ -10,7 +10,7 @@ pub struct CheckedSet<'a> {
 }
 
 impl CheckedSet<'_> {
-    pub fn new<'a>(roms: &'a HashMap<String, String>, files: &'a Vec<File>) -> CheckedSet<'a> {
+    pub fn new<'a>(roms: &'a HashMap<Checksum, String>, files: &'a Vec<File>) -> CheckedSet<'a> {
         // Initialise counts
         let mut verified = 0;
         let mut notname = 0;

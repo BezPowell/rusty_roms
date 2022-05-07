@@ -1,3 +1,5 @@
+pub mod hash;
+
 #[derive(Debug, PartialEq)]
 pub enum VerifiedStatus<'a> {
     Verified { name: &'a str },
