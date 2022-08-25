@@ -1,4 +1,4 @@
-use super::files::File;
+use crate::lib::input::File;
 pub mod hash;
 
 #[derive(Debug, PartialEq)]

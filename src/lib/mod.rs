@@ -1,12 +1,10 @@
-use self::dat::{Datafile, Game, Rom};
-use self::files::File;
+use self::input::*;
 use self::result::ResultSet;
 use self::verify::hash::Checksum;
 use std::str::FromStr;
 use std::{collections::HashMap, error::Error};
 
-mod dat;
-mod files;
+mod input;
 mod result;
 mod verify;
 
@@ -33,7 +31,7 @@ impl App {
     /// Verifies rom files against the datafile.
     ///
     pub fn verify(&self) -> ResultSet {
-        let test_set = self.build_test_set();
+        let test_set = self.dat.build_test_set();
         let mut results = ResultSet::new();
 
         // Verify roms
@@ -45,19 +43,5 @@ impl App {
         }
 
         results
-    }
-
-    /// Builds a Hashmap to check files against.
-    /// This is an intermediary type to allow
-    /// rapid checking.
-    fn build_test_set(&self) -> HashMap<Checksum, (&Rom, &Game)> {
-        let mut set = HashMap::new();
-        for game in self.dat.games() {
-            for rom in game.roms() {
-                set.insert(Checksum::from_str(rom.hash()).unwrap(), (rom, game));
-            }
-        }
-
-        set
     }
 }

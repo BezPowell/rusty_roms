@@ -1,14 +1,10 @@
-use std::{collections::HashMap, hash::Hash};
-
-use super::{
-    dat::{Game, Rom},
-    files::File,
-    verify::VerifiedStatus,
-};
+use crate::lib::input::{File, Game, Rom};
+use crate::lib::verify::VerifiedStatus;
+use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct ResultSet<'a> {
-    matched: HashMap<String, GameResult<'a>>,
+    matched: HashMap<&'a str, GameResult<'a>>,
     unmatched: Vec<&'a File>,
 }
 
@@ -20,7 +16,7 @@ impl<'a> ResultSet<'a> {
         }
     }
 
-    pub fn matches(&self) -> &HashMap<String, GameResult<'a>> {
+    pub fn matches(&self) -> &HashMap<&str, GameResult<'a>> {
         &self.matched
     }
 
@@ -31,8 +27,7 @@ impl<'a> ResultSet<'a> {
     pub fn add_match(&mut self, file: &'a File, game: &'a Game, rom: &'a Rom) {
         // Create new entry if none exists.
         if !self.matched.contains_key(game.name()) {
-            self.matched
-                .insert(game.name().to_string(), GameResult::new(game));
+            self.matched.insert(game.name(), GameResult::new(game));
         }
 
         // Update existing entry
@@ -77,6 +72,6 @@ impl<'a> GameResult<'a> {
     }
 
     pub fn roms(&self) -> &HashMap<String, VerifiedStatus<'a>> {
-        &self.roms()
+        &self.roms
     }
 }

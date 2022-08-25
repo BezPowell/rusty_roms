@@ -1,12 +1,14 @@
 mod game;
 mod rom;
 
-use std::io::Read;
+use std::{collections::HashMap, io::Read, str::FromStr};
 
 pub use game::Game;
 pub use rom::Rom;
 use serde_derive::Deserialize;
 use serde_xml_rs::{from_str, Error};
+
+use crate::lib::verify::hash::Checksum;
 
 /// Contains a list of games,
 /// and the checksums for their roms.
@@ -28,8 +30,18 @@ impl Datafile {
         Ok(dat)
     }
 
-    pub fn games(&self) -> &Vec<Game> {
-        &self.games
+    /// Builds a Hashmap to check files against.
+    /// This is an intermediary type to allow
+    /// rapid checking.
+    pub fn build_test_set(&self) -> HashMap<Checksum, (&Rom, &Game)> {
+        let mut set = HashMap::new();
+        for game in &self.games {
+            for rom in game.roms() {
+                set.insert(Checksum::from_str(rom.hash()).unwrap(), (rom, game));
+            }
+        }
+
+        set
     }
 }
 

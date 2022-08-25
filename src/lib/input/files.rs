@@ -70,7 +70,7 @@ impl File {
 mod tests {
     use std::{fs, path::PathBuf, str::FromStr};
 
-    use crate::lib::{files::File, verify::hash::Checksum};
+    use crate::lib::{input::File, verify::hash::Checksum};
 
     #[test]
     fn can_read_rom() {
