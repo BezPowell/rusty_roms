@@ -1,5 +1,5 @@
+use super::GameResult;
 use crate::lib::input::{File, Game, Rom};
-use crate::lib::verify::VerifiedStatus;
 use std::collections::HashMap;
 
 #[derive(Debug)]
@@ -38,40 +38,5 @@ impl<'a> ResultSet<'a> {
 
     pub fn add_nonmatch(&mut self, file: &'a File) {
         self.unmatched.push(file);
-    }
-}
-
-#[derive(Debug)]
-pub struct GameResult<'a> {
-    roms: HashMap<String, VerifiedStatus<'a>>,
-}
-
-impl<'a> GameResult<'a> {
-    /// Build a new game result from the specified string.
-    pub fn new(game: &'a Game) -> GameResult<'a> {
-        let mut roms = HashMap::with_capacity(game.roms().len());
-        for rom in game.roms() {
-            roms.insert(rom.name().to_string(), VerifiedStatus::Missing);
-        }
-
-        GameResult { roms }
-    }
-
-    /// Add a file to the given
-    pub fn add_file(&mut self, file: &'a File, rom: &'a Rom) {
-        let status = if file.name().unwrap() == rom.name() {
-            VerifiedStatus::Verified { file }
-        } else {
-            VerifiedStatus::MatchNotName {
-                file: file,
-                correct_name: rom.name(),
-            }
-        };
-
-        self.roms.insert(rom.name().to_string(), status);
-    }
-
-    pub fn roms(&self) -> &HashMap<String, VerifiedStatus<'a>> {
-        &self.roms
     }
 }
