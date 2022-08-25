@@ -1,12 +1,9 @@
-use std::{fs, path::Path, time::Instant};
-
+use crate::lib::App;
 use easy_args::ArgSpec;
-use lib::dat::Datafile;
-
-use crate::lib::{files::File, set::CheckedSet};
+use std::{error::Error, time::Instant};
 mod lib;
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     let args = ArgSpec::build()
         .string("dat")
         .string("input")
@@ -17,44 +14,32 @@ fn main() {
     // Start timing
     let now = Instant::now();
 
-    // Process dat
-    let roms = match args.string("dat") {
-        Some(src) => Datafile::from_file(src).unwrap().roms(),
-        None => panic!("No DAT file specified."),
-    };
+    // Check arguments
+    let dat_path = args.string("dat").expect("No DAT file specified.");
+    let file_dir = args.string("input").expect("No input directory specified.");
 
-    // Load files
-    let files = match args.string("input") {
-        Some(src) => File::read_dir(src).unwrap(),
-        None => panic!("No input directory specified."),
-    };
+    // Build App
+    let app = App::new(dat_path, file_dir)?;
 
-    // Verify ROMs
-    let results = CheckedSet::new(&roms, &files);
+    // Verify files
+    let results = app.verify();
 
-    // Display results
-    for file in results.results() {
-        println!("{} {}", file.0.name().unwrap(), file.1.pretty_print());
-    }
-
-    // Copy files if directory specified
-    if let Some(output) = args.string("output") {
-        println!("Copying Files");
-        for item in results.results() {
-            if let Some(name) = item.1.output_path() {
-                let target = Path::new(output).join(name);
-                fs::copy(item.0.path(), target).unwrap();
-            }
-        }
-    }
-
-    // Get elapsed time
+    // Print results
     let elapsed = now.elapsed();
-    let counts = results.counts();
+    println!("Finished verifying files in {:.2?}", elapsed);
 
-    println!("Checked {} roms in {:.2?}", results.len(), elapsed);
+    println!("--- Matched {} games ---", results.matches().len());
+    for (game, _result) in results.matches() {
+        println!("Game: {}", game);
+    }
+
     println!(
-        "{} matched exactly. {} matched with wrong filename. {} could not be matched",
-        counts.0, counts.1, counts.2
+        "--- Could not match {} files ---",
+        results.nonmatches().len()
     );
+    for file in results.nonmatches() {
+        println!("{:?}", file.path());
+    }
+
+    Ok(())
 }
