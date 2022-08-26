@@ -30,5 +30,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     let elapsed = now.elapsed();
     println!("Finished verifying files in {:.2?}", elapsed);
 
+    if let Some(output) = args.string("output") {
+        println!("Copying Files");
+        app.copy(results, output)?;
+    }
+
     Ok(())
 }

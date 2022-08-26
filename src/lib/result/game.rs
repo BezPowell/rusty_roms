@@ -29,12 +29,12 @@ impl<'a> GameResult<'a> {
     pub fn add_file(&mut self, file: &'a File, rom: &'a Rom) {
         let status = if file.name().unwrap() == rom.name() {
             VerifiedStatus::Verified {
-                file: file.name().unwrap(),
+                file: file,
                 output: rom.name(),
             }
         } else {
             VerifiedStatus::MatchNotName {
-                file: file.name().unwrap(),
+                file: file,
                 output: rom.name(),
             }
         };

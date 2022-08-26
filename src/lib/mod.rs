@@ -1,6 +1,8 @@
 use self::input::*;
 use self::result::{GameStatus, ResultSet};
 use std::error::Error;
+use std::path::Path;
+use std::{fs, io};
 
 mod input;
 mod result;
@@ -94,5 +96,35 @@ impl App {
             "Found {} complete games, {} incomplete games, and {} unmatched files.",
             complete, incomplete, unmatched
         );
+    }
+
+    /// Copy files to specified directory.
+    pub fn copy(&self, set: ResultSet, dir: &str) -> io::Result<()> {
+        // Create target directory if it doesn't exist.
+        let output = Path::new(dir);
+        fs::create_dir_all(output)?;
+
+        // Loop through each matched game
+        for (name, game) in set.matches() {
+            // If game has more than 1 ROM create subdirectory
+            let target = if game.roms().len() > 1 {
+                let path = output.join(name);
+                fs::create_dir_all(path.as_path())?;
+
+                path
+            } else {
+                output.to_path_buf()
+            };
+
+            // Copy all roms
+            for (_, rom) in game.roms() {
+                if let Some(rom) = rom {
+                    let target = Path::new(&target).join(rom.output());
+                    fs::copy(rom.file().path(), target).unwrap();
+                }
+            }
+        }
+
+        Ok(())
     }
 }
