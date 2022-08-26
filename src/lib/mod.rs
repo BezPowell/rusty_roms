@@ -1,8 +1,6 @@
 use self::input::*;
-use self::result::ResultSet;
-use self::verify::hash::Checksum;
-use std::str::FromStr;
-use std::{collections::HashMap, error::Error};
+use self::result::{GameStatus, ResultSet};
+use std::error::Error;
 
 mod input;
 mod result;
@@ -43,5 +41,58 @@ impl App {
         }
 
         results
+    }
+
+    /// Reports the results of the check
+    pub fn report(&self, set: &ResultSet) {
+        // Display matches
+        if set.matches().len() > 0 {
+            println!("--- Matched {} games ---", set.matches().len());
+            for (name, result) in set.matches() {
+                println!("Game {}: {:?}", name, result.status());
+                for (rom, status) in result.roms() {
+                    let status = match status {
+                        Some(status) => match status {
+                            verify::VerifiedStatus::Verified { file: _, output: _ } => "Verified.",
+                            verify::VerifiedStatus::MatchNotName { file: _, output: _ } => {
+                                "Verified, with wrong file name."
+                            }
+                        },
+                        None => "File missing.",
+                    };
+                    println!("--Rom {}: {}", rom, status);
+                }
+            }
+            println!("");
+        }
+
+        // Display non-matches
+        if set.nonmatches().len() > 0 {
+            println!("--- Could not match {} files ---", set.nonmatches().len());
+            for file in set.nonmatches() {
+                println!("{:?}", file.path());
+            }
+        }
+
+        // Display summary
+        let complete = set
+            .matches()
+            .values()
+            .filter(|n| n.status() == GameStatus::Complete)
+            .count();
+
+        let incomplete = set
+            .matches()
+            .values()
+            .filter(|n| n.status() == GameStatus::Incomplete)
+            .count();
+
+        let unmatched = set.nonmatches().len();
+
+        println!("--- Summary ---");
+        println!(
+            "Found {} complete games, {} incomplete games, and {} unmatched files.",
+            complete, incomplete, unmatched
+        );
     }
 }

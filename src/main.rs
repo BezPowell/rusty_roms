@@ -25,21 +25,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     let results = app.verify();
 
     // Print results
+    app.report(&results);
+
     let elapsed = now.elapsed();
     println!("Finished verifying files in {:.2?}", elapsed);
-
-    println!("--- Matched {} games ---", results.matches().len());
-    for (game, _result) in results.matches() {
-        println!("Game: {}", game);
-    }
-
-    println!(
-        "--- Could not match {} files ---",
-        results.nonmatches().len()
-    );
-    for file in results.nonmatches() {
-        println!("{:?}", file.path());
-    }
 
     Ok(())
 }
