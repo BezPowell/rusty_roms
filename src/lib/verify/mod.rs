@@ -1,26 +1,24 @@
+use crate::lib::input::File;
 pub mod hash;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub enum VerifiedStatus<'a> {
-    Verified { name: &'a str },
-    MatchNotName { name: &'a str },
-    Unverified,
+    Verified { file: &'a File, output: &'a str },
+    MatchNotName { file: &'a File, output: &'a str },
 }
 
-impl VerifiedStatus<'_> {
-    pub fn pretty_print(&self) -> String {
+impl<'a> VerifiedStatus<'a> {
+    pub fn file(&self) -> &File {
         match self {
-            VerifiedStatus::Verified { name: _ } => "Verified successfully.".to_string(),
-            VerifiedStatus::MatchNotName { name } => format!("contents verified as {}", name),
-            VerifiedStatus::Unverified => "could not be matched.".to_string(),
+            VerifiedStatus::Verified { file, output: _ } => file,
+            VerifiedStatus::MatchNotName { file, output: _ } => file,
         }
     }
 
-    pub fn output_path(&self) -> Option<&str> {
+    pub fn output(&self) -> &str {
         match self {
-            VerifiedStatus::Verified { name } => Some(name),
-            VerifiedStatus::MatchNotName { name } => Some(name),
-            VerifiedStatus::Unverified => None,
+            VerifiedStatus::Verified { file: _, output } => output,
+            VerifiedStatus::MatchNotName { file: _, output } => output,
         }
     }
 }

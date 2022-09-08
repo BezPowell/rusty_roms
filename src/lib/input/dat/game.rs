@@ -9,7 +9,11 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn roms(self) -> Vec<Rom> {
-        self.roms
+    pub fn roms(&self) -> &Vec<Rom> {
+        &self.roms
+    }
+
+    pub fn name(&self) -> &str {
+        &self.name
     }
 }
