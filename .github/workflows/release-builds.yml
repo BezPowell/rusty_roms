@@ -1,0 +1,47 @@
+name: Release Builds
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  release_builds:
+    name: rusty_roms-release
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    if: "!github.event.release.prerelease"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v1.3.0
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+      - name: Set outputs
+        id: vars
+        run: |
+          echo "::set-output name=version::$(cargo pkgid | cut -d# -f2 | cut -d: -f2)"
+      - name: Build
+        run: cargo build --release
+      - name: Move executable
+        run: |
+          npm install -g move-file-cli mkdirp
+          mkdirp artifacts
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            move-file target/release/rusty_roms.exe artifacts/rusty_roms-windows.exe
+          elif [ "$RUNNER_OS" == "Linux" ]; then
+            move-file target/release/rusty_roms artifacts/rusty_roms-linux
+          else
+            move-file target/release/rusty_roms artifacts/rusty_roms-mac
+          fi
+        shell: bash
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: artifacts/*
+          tag_name: "v${{ steps.vars.outputs.version }}"
